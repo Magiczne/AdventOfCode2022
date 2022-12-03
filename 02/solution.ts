@@ -1,7 +1,6 @@
 import { resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { solutionExample, solutionPart1, solutionPart2 } from '../util'
-import {read} from "fs";
 
 type Moves = 'A' | 'B' | 'C'
 type Result = 'X' | 'Y' | 'Z'
@@ -94,7 +93,6 @@ const calculateScore2 = (file: string): number => {
       if (item.result === 'X') {
         score += pointsMap[winnersMap[item.opponent]]
       }
-
 
       return score
     }, 0)
