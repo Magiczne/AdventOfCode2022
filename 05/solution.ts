@@ -77,4 +77,4 @@ solutionExample(processOrders(exampleStacks, exampleOrders))
 solutionPart1(processOrders(stacks, orders))
 
 solutionExample(processOrders(exampleStacks, exampleOrders, true))
-solutionPart1(processOrders(stacks, orders, true))
+solutionPart2(processOrders(stacks, orders, true))
