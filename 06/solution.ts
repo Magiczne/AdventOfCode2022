@@ -24,7 +24,6 @@ const input = readFileSync(resolve(__dirname, 'input.txt'))
   .trim()
   .split('\n')
 
-
 examples.forEach(packet => solutionExample(findMarkerPosition(packet, 4)))
 input.forEach(packet => solutionPart1(findMarkerPosition(packet, 4)))
 
