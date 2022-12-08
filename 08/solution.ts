@@ -31,7 +31,7 @@ const buildForest = (file: string): Forest => {
 const findTreesInDirection = ({ x, y }: Tree, direction: Direction, forest: Forest): Array<Tree> => {
   switch (direction) {
     case "top":
-      // Why do I need to reverse that? :p
+      // Reverse because of order in which trees were added to array
       return forest.filter(tree => tree.x === x && tree.y < y).reverse()
 
     case "right":
@@ -41,6 +41,7 @@ const findTreesInDirection = ({ x, y }: Tree, direction: Direction, forest: Fore
       return forest.filter(tree => tree.x === x && tree.y > y)
 
     case "left":
+      // Reverse because of order in which trees were added to array
       return forest.filter(tree => tree.x < x && tree.y === y).reverse()
   }
 }
