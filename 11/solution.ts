@@ -6,6 +6,7 @@ import { solutionExample, solutionPart1, solutionPart2 } from '../util'
 interface Monkey {
   items: Array<number>
   operation: (level: number) => number
+  divisor: number
   divisionTest: (level: number) => boolean
   successTarget: number
   failureTarget: number
@@ -45,6 +46,7 @@ const loadMonkeys = (file: string): ReadonlyArray<Monkey> => {
       return {
         items: startingItems.map(item => parseInt(item, 10)),
         operation: parseOperation(monkeyData[2]),
+        divisor,
         divisionTest: value => value % divisor === 0,
         successTarget,
         failureTarget,
@@ -53,15 +55,22 @@ const loadMonkeys = (file: string): ReadonlyArray<Monkey> => {
     })
 }
 
-const processRounds = (file: string, count: number): ReadonlyArray<Monkey> => {
+const processRounds = (file: string, count: number, part2: boolean): ReadonlyArray<Monkey> => {
   const monkeys = loadMonkeys(file)
+  const largestCommonMultiplierOfDivisors = monkeys.reduce<number>((acc, monkey) => {
+    return acc * monkey.divisor
+  }, 1)
+
+  const worryLevelReducer: (level: number) => number = part2
+    ? level => level % largestCommonMultiplierOfDivisors
+    : level => Math.floor(level / 3)
 
   for (let i = 0; i < count; i++) {
     monkeys.forEach(monkey => {
       monkey.items.forEach(item => {
         monkey.inspectionCount++
 
-        const newWorryLevel = Math.floor( monkey.operation(item) / 3)
+        const newWorryLevel = worryLevelReducer(monkey.operation(item))
 
         if (monkey.divisionTest(newWorryLevel)) {
           monkeys[monkey.successTarget].items.push(newWorryLevel)
@@ -77,8 +86,8 @@ const processRounds = (file: string, count: number): ReadonlyArray<Monkey> => {
   return monkeys
 }
 
-const calculateMonkeyBusiness = (file: string, count: number) => {
-  const inspectionCounts = processRounds(file, count)
+const calculateMonkeyBusiness = (file: string, count: number, part2 = false) => {
+  const inspectionCounts = processRounds(file, count, part2)
     .map(monkey => monkey.inspectionCount)
     .sort((lhs, rhs) => rhs - lhs)
 
@@ -87,3 +96,6 @@ const calculateMonkeyBusiness = (file: string, count: number) => {
 
 solutionExample(calculateMonkeyBusiness('example.txt', 20))
 solutionPart1(calculateMonkeyBusiness('input.txt', 20))
+
+solutionExample(calculateMonkeyBusiness('example.txt', 10000, true))
+solutionPart1(calculateMonkeyBusiness('input.txt', 10000, true))
