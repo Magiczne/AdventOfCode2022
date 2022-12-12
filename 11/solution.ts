@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
-import { last } from "radash";
+import { last } from 'radash'
 import { solutionExample, solutionPart1, solutionPart2 } from '../util'
 
 interface Monkey {
@@ -98,4 +98,4 @@ solutionExample(calculateMonkeyBusiness('example.txt', 20))
 solutionPart1(calculateMonkeyBusiness('input.txt', 20))
 
 solutionExample(calculateMonkeyBusiness('example.txt', 10000, true))
-solutionPart1(calculateMonkeyBusiness('input.txt', 10000, true))
+solutionPart2(calculateMonkeyBusiness('input.txt', 10000, true))
