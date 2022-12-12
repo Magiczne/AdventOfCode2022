@@ -4,6 +4,7 @@ import { solutionExample, solutionPart1, solutionPart2 } from '../util'
 
 enum PointType {
   Start = 'S',
+  LowestPoint = 'a',
   Finish = 'E'
 }
 
@@ -11,7 +12,7 @@ type Position = { x: number, y: number }
 type Point = { height: number, finish?: true }
 type Graph = Array<Array<Point>>
 
-const readGraph = (file: string): [Position, Position, Graph] => {
+const readGraph = (file: string): [Position, Array<Position>, Position, Graph] => {
   const grid = readFileSync(resolve(__dirname, file))
     .toString()
     .trim()
@@ -25,6 +26,16 @@ const readGraph = (file: string): [Position, Position, Graph] => {
 
   const start: Position = { x: startX, y: startY }
   const finish: Position = { x: finishX, y: finishY }
+  const startingPositions: Array<Position> = []
+
+  grid.forEach((row, x) => {
+    row.forEach((point, y) => {
+      if (point === PointType.Start || point === PointType.LowestPoint) {
+        startingPositions.push({ x, y })
+      }
+    })
+  })
+
   const graph: Graph = grid.map(row => {
     return row.map(point => {
       switch (point) {
@@ -47,7 +58,7 @@ const readGraph = (file: string): [Position, Position, Graph] => {
     })
   })
 
-  return [start, finish, graph]
+  return [start, startingPositions, finish, graph]
 }
 
 const getNeighbours = (graph: Graph, { x, y }: Position): Array<Position> => {
@@ -61,7 +72,7 @@ const getNeighbours = (graph: Graph, { x, y }: Position): Array<Position> => {
   return neighbours.filter(neighbour => neighbour !== null) as Array<Position>
 }
 
-const dijkstra = (graph: Graph, start: Position, finish: Position): number => {
+const dijkstra = (graph: Graph, start: Position, finish: Array<Position>, reverseDirection = false): number => {
   const visited: Array<string> = []
   const queue: Array<Position> = [start]
   const cost: Record<string, number> = {
@@ -79,7 +90,11 @@ const dijkstra = (graph: Graph, start: Position, finish: Position): number => {
     const reachableNeighbours = getNeighbours(graph, currentPosition)
       .filter(neighbour => !visited.includes(`${neighbour.x}_${neighbour.y}`))
       .filter(neighbour => {
-        return graph[neighbour.x][neighbour.y].height <= currentHeight + 1
+        if (reverseDirection) {
+          return graph[neighbour.x][neighbour.y].height + 1 >= currentHeight
+        } else {
+          return graph[neighbour.x][neighbour.y].height <= currentHeight + 1
+        }
       })
 
     queue.push(...reachableNeighbours)
@@ -98,14 +113,27 @@ const dijkstra = (graph: Graph, start: Position, finish: Position): number => {
     visited.push(`${currentPosition.x}_${currentPosition.y}`)
   }
 
-  return cost[`${finish.x}_${finish.y}`]
+  const costs = finish
+    .map(finishPosition => cost[`${finishPosition.x}_${finishPosition.y}`])
+    .filter(cost => cost !== undefined)
+
+  return Math.min(...costs)
 }
 
 const part1 = (file: string): number => {
-  const [start, finish, graph] = readGraph(file)
+  const [start, , finish, graph] = readGraph(file)
 
-  return dijkstra(graph, start, finish)
+  return dijkstra(graph, start, [finish])
+}
+
+const part2 = (file: string): number => {
+  const [, startingPositions, finish, graph] = readGraph(file)
+
+  return dijkstra(graph, finish, startingPositions, true)
 }
 
 solutionExample(part1('example.txt'))
 solutionPart1(part1('input.txt'))
+
+solutionExample(part2('example.txt'))
+solutionPart2(part2('input.txt'))
