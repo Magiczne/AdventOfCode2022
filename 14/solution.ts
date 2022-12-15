@@ -186,4 +186,4 @@ solutionExample(getAbyssFactor('example.txt'))
 solutionPart1(getAbyssFactor('input.txt'))
 
 solutionExample(getRestFactor('example.txt'))
-solutionPart1(getRestFactor('input.txt'))
+solutionPart2(getRestFactor('input.txt'))
