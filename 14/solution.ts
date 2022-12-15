@@ -4,7 +4,7 @@ import { range, xprod } from 'ramda'
 import { solutionExample, solutionPart1, solutionPart2, windows } from '../util'
 
 type Point = { x: number, y: number }
-type Cell = '.' | '#' | '+' | 'o'
+type Cell = '.' | '#' | 'o'
 type Map = Array<Array<Cell>>
 
 const printMap = (map: Map, minX: number, minY: number, maxX: number, maxY: number): void => {
@@ -12,7 +12,7 @@ const printMap = (map: Map, minX: number, minY: number, maxX: number, maxY: numb
     let row = ''
 
     for (let x = minX; x <= maxX; x++) {
-      row += map[x][y]
+      row += map[x][y] ?? '-'
     }
 
     console.log(row)
@@ -58,7 +58,6 @@ const readMap = (file: string): [Map, number] => {
     return Array.from({ length: maxY + 1 }, () => '.')
   })
 
-  map[500][0] = '+'
 
   for (const rockLine of rocks) {
     for (const window of windows(rockLine, 2)) {
@@ -71,13 +70,120 @@ const readMap = (file: string): [Map, number] => {
   return [map, maxY]
 }
 
+const simulateAbyssFactorSandUnit = (map: Map, maxY: number): boolean => {
+  const unitPosition: Point = { x: 500, y: 0 }
+
+  while (true) {
+    // Fallen into abyss
+    if (unitPosition.y >= maxY) {
+      return true
+    }
+
+    if (map[unitPosition.x][unitPosition.y + 1] === '.') {
+      unitPosition.y++
+
+      continue
+    }
+
+    if (map[unitPosition.x - 1][unitPosition.y + 1] === '.') {
+      unitPosition.x--
+      unitPosition.y++
+
+      continue
+    }
+
+    if (map[unitPosition.x + 1][unitPosition.y + 1] === '.') {
+      unitPosition.x++
+      unitPosition.y++
+
+      continue
+    }
+
+    map[unitPosition.x][unitPosition.y] = 'o'
+
+    return false
+  }
+}
+
 const getAbyssFactor = (file: string): number => {
   const [map, maxY] = readMap(file)
+  let sandUnitsCounter = 0
 
-  printMap(map, 490, 0, 505, maxY)
+  while (true) {
+    let fallenIntoAbyss = simulateAbyssFactorSandUnit(map, maxY)
 
-  return 1337
+    if (fallenIntoAbyss) {
+      break
+    }
+
+    sandUnitsCounter++
+  }
+
+  return sandUnitsCounter
+}
+
+const simulateRestFactorSandUnit = (map: Map, maxY: number): boolean => {
+  const unitPosition: Point = { x: 500, y: 0 }
+
+  while (true) {
+    if (map[500][0] === 'o') {
+      return true
+    }
+
+    if (map[unitPosition.x][unitPosition.y + 1] === '.') {
+      unitPosition.y++
+
+      continue
+    }
+
+    if (map[unitPosition.x - 1][unitPosition.y + 1] === '.') {
+      unitPosition.x--
+      unitPosition.y++
+
+      continue
+    }
+
+    if (map[unitPosition.x + 1][unitPosition.y + 1] === '.') {
+      unitPosition.x++
+      unitPosition.y++
+
+      continue
+    }
+
+    map[unitPosition.x][unitPosition.y] = 'o'
+
+    return false
+  }
+}
+
+const getRestFactor = (file: string): number => {
+  const [map, maxY] = readMap(file)
+
+  // The floor
+  for (let x = 0; x < 1000; x++) {
+    map[x][maxY + 1] = '.'
+    map[x][maxY + 2] = '#'
+  }
+
+  let sandUnitsCounter = 0
+
+  while (true) {
+    // printMap(map, 480, 0, 515, maxY + 3)
+
+    let sourceBlocked = simulateRestFactorSandUnit(map, maxY)
+
+    if (sourceBlocked) {
+      break
+    }
+
+    sandUnitsCounter++
+  }
+
+  return sandUnitsCounter
 }
 
 solutionExample(getAbyssFactor('example.txt'))
+solutionPart1(getAbyssFactor('input.txt'))
 
+solutionExample(getRestFactor('example.txt'))
+solutionPart1(getRestFactor('input.txt'))
