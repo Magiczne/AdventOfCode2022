@@ -34,6 +34,10 @@ class CircularLinkedList<T> extends LinkedList<T> {
   }
 
   moveNodeLeft(node: LinkedListNode<T>, distance: number): void {
+    if (distance === 0) {
+      return
+    }
+
     if (node === this.head) {
       this.head = node.prev!
     }
@@ -57,6 +61,10 @@ class CircularLinkedList<T> extends LinkedList<T> {
   }
 
   moveNodeRight(node: LinkedListNode<T>, distance: number): void {
+    if (distance === 0) {
+      return
+    }
+
     if (node === this.head) {
       this.head = node.next!
     }

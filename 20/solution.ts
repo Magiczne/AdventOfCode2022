@@ -1,40 +1,36 @@
 import { resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
-import { CircularLinkedList, LinkedListNode, solutionExample} from '../util'
+import {
+  CircularLinkedList,
+  LinkedListNode,
+  solutionExample,
+  solutionPart1, solutionPart2
+} from '../util'
 
-const decryptionKey = 811589153
+const part2DecryptionKey = 811589153
 
-const readNodes = (file: string): Array<LinkedListNode<number>> => {
+const readNodes = (file: string, decryptionKey: number): Array<LinkedListNode<number>> => {
   return readFileSync(resolve(__dirname, file), 'utf-8')
     .trim()
     .split('\n')
-    .map(item => new LinkedListNode(parseInt(item, 10)))
+    .map(item => new LinkedListNode(parseInt(item, 10) * decryptionKey))
 }
 
-function printVerbose<T>(node: LinkedListNode<T>): void {
-  let currentNode: LinkedListNode<T> = node
-
-  do {
-    console.log(currentNode.prev?.value, '\t->', currentNode.value, '\t->', currentNode.next?.value)
-
-    // It's circular, it will always exist
-    currentNode = currentNode.next!
-  } while (currentNode !== node)
-}
-
-const sumCoordinates = (file: string): number => {
-  const nodes = readNodes(file)
+const sumCoordinates = (file: string, decryptionKey = 1, rounds = 1): number => {
+  const nodes = readNodes(file, decryptionKey)
   const linkedList = new CircularLinkedList(nodes)
 
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i]
-    const direction = Math.sign(node.value)
-    const distance = Math.abs(node.value)
+  for (let round = 0; round < rounds; round++) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const direction = Math.sign(node.value)
+      const distance = Math.abs(node.value) % (nodes.length - 1)
 
-    if (direction < 0) {
-      linkedList.moveNodeLeft(node, distance)
-    } else {
-      linkedList.moveNodeRight(node, distance)
+      if (direction < 0) {
+        linkedList.moveNodeLeft(node, distance)
+      } else {
+        linkedList.moveNodeRight(node, distance)
+      }
     }
   }
 
@@ -49,4 +45,7 @@ const sumCoordinates = (file: string): number => {
 }
 
 solutionExample(sumCoordinates('example.txt'))
-solutionExample(sumCoordinates('input.txt'))
+solutionPart1(sumCoordinates('input.txt'))
+
+solutionExample(sumCoordinates('example.txt', part2DecryptionKey, 10))
+solutionPart2(sumCoordinates('input.txt', part2DecryptionKey, 10))
