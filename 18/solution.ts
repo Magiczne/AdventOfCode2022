@@ -3,8 +3,14 @@ import { readFileSync } from 'node:fs'
 import { max } from 'radash'
 import { solutionExample, solutionPart1, solutionPart2 } from '../util'
 
+const enum CellType {
+  Nothing = 'N',
+  Lava = 'L',
+  Water = 'W'
+}
+
 type Point = { x: number, y: number, z: number }
-type Grid = Array<Array<Array<boolean>>>
+type Grid = Array<Array<Array<CellType>>>
 
 const directions: ReadonlyArray<Point> = [
   { x: 1, y: 0, z: 0 },
@@ -24,10 +30,11 @@ const readPoints = (file: string): Array<Point> => {
         .split(',')
         .map(coordinate => parseInt(coordinate, 10))
 
+      // Moving every coordinate by 1 for flood fill to work correctly
       return {
-        x: point[0],
-        y: point[1],
-        z: point[2]
+        x: point[0] + 1,
+        y: point[1] + 1,
+        z: point[2] + 1
       }
     })
 }
@@ -44,19 +51,16 @@ const getNeighbors = ({ x, y, z }: Point): Array<Point> => {
 
 const countEmptyNeighbors = (point: Point, grid: Grid): number => {
   return getNeighbors(point)
-    .map(neighbor => grid[neighbor.x]?.[neighbor.y]?.[neighbor.z])
-    .filter(neighbor => neighbor !== true)
+    .map(neighbor => grid[neighbor.x]?.[neighbor.y]?.[neighbor.z] ?? CellType.Nothing)
+    .filter(neighbor => neighbor !== CellType.Lava)
     .length
 }
 
-const isAirPocket = (point: Point, grid: Grid): boolean => {
-  if (grid[point.x]?.[point.y]?.[point.z] === true) {
-    return false
-  }
-
+const countWaterNeighbors = (point: Point, grid: Grid): number => {
   return getNeighbors(point)
-    .map(neighbor => grid[neighbor.x]?.[neighbor.y]?.[neighbor.z])
-    .every(neighbor => neighbor === true)
+    .map(neighbor => grid[neighbor.x][neighbor.y][neighbor.z])
+    .filter(neighbor => neighbor === CellType.Water)
+    .length
 }
 
 const createGrid = (points: Array<Point>) => {
@@ -64,34 +68,40 @@ const createGrid = (points: Array<Point>) => {
   const maxY = max(points, point => point.y)!.y
   const maxZ = max(points, point => point.z)!.z
 
-  const grid: Grid = Array.from({ length: maxX + 1 }, (): Array<Array<boolean>> => {
-    return Array.from({ length: maxY + 1 }, (): Array<boolean> => {
-      return Array.from({ length: maxZ + 1 }, (): boolean => false)
+  // +2 instead +1 for flood fill to work correctly around the edges
+  const grid: Grid = Array.from({ length: maxX + 2 }, (): Array<Array<CellType>> => {
+    return Array.from({ length: maxY + 2 }, (): Array<CellType> => {
+      return Array.from({ length: maxZ + 2 }, (): CellType => CellType.Nothing)
     })
   })
 
   points.forEach(point => {
-    grid[point.x][point.y][point.z] = true
+    grid[point.x][point.y][point.z] = CellType.Lava
   })
 
   return grid
 }
 
-const countAirPockets = (grid: Grid): number => {
-  let counter = 0
+const floodFill = (grid: Grid): void => {
+  const queue: Array<Point> = [{ x: 0, y: 0, z: 0 }]
 
-  for (let x = 0; x < grid.length; x++) {
-    for (let y = 0; y < grid[x].length; y++) {
-      for (let z = 0; z < grid[x][y].length; z++) {
-        if (isAirPocket({ x, y, z }, grid)) {
-          console.log({ x, y, z }, 'is an air pocket')
-          counter++
-        }
+  grid[0][0][0] = CellType.Water
+
+  while (queue.length > 0) {
+    const { x, y, z } = queue.shift()!
+
+    directions.forEach(direction => {
+      if (grid[x + direction.x]?.[y + direction.y]?.[z + direction.z] === undefined) {
+        return
       }
-    }
-  }
 
-  return counter
+      if (grid[x + direction.x][y + direction.y][z + direction.z] === CellType.Nothing) {
+        grid[x + direction.x][y + direction.y][z + direction.z] = CellType.Water
+
+        queue.push({ x: x + direction.x, y: y + direction.y, z: z + direction.z })
+      }
+    })
+  }
 }
 
 const calculateSurfaceArea = (file: string): number => {
@@ -106,17 +116,16 @@ const calculateSurfaceArea = (file: string): number => {
 const calculateOutsideSurfaceArea = (file: string): number => {
   const points = readPoints(file)
   const grid = createGrid(points)
-  const airPockets = countAirPockets(grid)
 
-  console.log(airPockets)
+  floodFill(grid)
 
   return points.reduce<number>((acc, point) => {
-    return acc + countEmptyNeighbors(point, grid)
-  }, 0) - airPockets * 6
+    return acc + countWaterNeighbors(point, grid)
+  }, 0)
 }
 
-// solutionExample(calculateSurfaceArea('example.txt'))
-// solutionPart1(calculateSurfaceArea('input.txt'))
+solutionExample(calculateSurfaceArea('example.txt'))
+solutionPart1(calculateSurfaceArea('input.txt'))
 
 solutionExample(calculateOutsideSurfaceArea('example.txt'))
 solutionPart2(calculateOutsideSurfaceArea('input.txt'))
